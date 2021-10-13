@@ -7,6 +7,7 @@ import pickle
 import sys
 from node import Node
 import node
+import time
 
 
 
@@ -21,7 +22,7 @@ class Window(QMainWindow):
 
         # setting geometry
         self.setGeometry(100, 100,
-                         500, 500)
+                         300, 500)
 
         # calling method
         self.UiComponents(train_data)
@@ -31,7 +32,7 @@ class Window(QMainWindow):
         # l the widgets
         self.show()
 
-        self.first_turn = 1
+        self.first_turn = 0
 
     # method for components
 
@@ -120,8 +121,9 @@ class Window(QMainWindow):
         determine_second.clicked.connect(lambda: self.set_turn(1))
 
     def set_turn(self, arg):
-        self.first_turn = arg
         self.reset_game_action()
+        self.first_turn = arg
+
         print(self.first_turn)
         if self.first_turn == 1:
             self.action_called()
@@ -133,6 +135,7 @@ class Window(QMainWindow):
         self.turn = 0
         self.times = 0
         self.push_hist = []
+        self.first_turn = 0
         # making label text empty:
         self.label.setText("")
 
@@ -146,37 +149,35 @@ class Window(QMainWindow):
 
     @staticmethod
     def _get_point_AI(push_hist, train_data):
+
         lower_node_list = train_data.next
         print('==================push hist ==============')
         print(push_hist)
         print('==========================================')
         if len(push_hist) == 0:
             print('push hist is None')
-            prob_list = [(i.win/i.total) for i in lower_node_list]
+            prob_list = [(((i.win *2)+(i.draw)+(i.total-i.win-i.draw)*-3)  / i.total) for i in lower_node_list]
             print(prob_list)
             for i in lower_node_list:
-                print(i.win, i.total, i.point)
+                print(f'point : {i.point}, win : {i.win}, draw:{i.draw}, total:{i.total}')
             max_index = prob_list.index(max(prob_list))
-            print(max_index)
             return lower_node_list[max_index].point
         else:
             for _ in range(len(push_hist)):
                 node = [i for i in lower_node_list if i.point == push_hist[_]][0]
-                print(node.point)
                 lower_node_list = node.next
-                prob_list = [(i.win / i.total) for i in lower_node_list]
-                print(prob_list)
-                for i in lower_node_list:
-                    print(i.win, i.total, i.point)
-            prob_list = [(i.win / i.total) for i in lower_node_list]
+            prob_list = [(((i.win *2)+(i.draw)+(i.total-i.win-i.draw)*-3)  / i.total) for i in lower_node_list]
+            print(prob_list)
+            for i in lower_node_list:
+                print(f'point : {i.point}, win : {i.win}, draw:{i.draw}, total:{i.total}')
             max_index = prob_list.index(max(prob_list))
             return lower_node_list[max_index].point
 
 
     # action called by the push buttons
     def action_called(self):
-        print('self turn, self.first_turn', self.turn, self.first_turn)
         self.times += 1
+
         # getting button which called the action
         person_turn = (self.turn == self.first_turn)
         AI_turn = (self.turn != self.first_turn)
@@ -239,7 +240,9 @@ class Window(QMainWindow):
         self.label.setText(text)
 
         if person_turn:
-            if win is False:
+            if self.times == 9:
+                pass
+            elif win is False:
                 self.action_called()
 
 

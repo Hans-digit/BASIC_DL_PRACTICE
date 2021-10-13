@@ -50,6 +50,7 @@ class TicTacToe():
         else:
             for i in range(len(prev_node_list)):
                 prev_node_list[i].total += 1
+                prev_node_list[i].draw += 1
                 # LOGGER.info('darw game')
 
         # prev_node_list_test = list(prev_node_list)
