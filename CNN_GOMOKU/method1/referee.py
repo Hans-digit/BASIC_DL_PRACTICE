@@ -26,15 +26,16 @@ class Referee():
     def _check_5_horizontal_end(stone_list):
         stone_list_data = list(stone_list)
         stone_list_data = sorted(stone_list_data, key = itemgetter(0, 1))
+        # print(stone_list_data)
         count = 0
         for i in range(len(stone_list_data)):
             try:
-                if [stone_list_data[i][0], stone_list_data[i][0] + 1] == stone_list_data[i+1]:
+                if set([stone_list_data[i][0], stone_list_data[i][1] + 1]) == set(stone_list_data[i+1]):
                     count += 1
                 else:
                     count = 0
                 if count == 4:
-                    print('horizontal end success')
+                    # print('horizontal end success')
                     return True
             except:
                 return False
@@ -48,12 +49,12 @@ class Referee():
         count = 0
         for i in range(len(stone_list_data)):
             try:
-                if [stone_list_data[i][0] +1, stone_list_data[i][0]] == stone_list_data[i + 1]:
+                if set([stone_list_data[i][0] +1, stone_list_data[i][1]]) == set(stone_list_data[i + 1]):
                     count += 1
                 else:
                     count = 0
                 if count == 4:
-                    print('vertical end success')
+                    # print('vertical end success')
                     return True
             except:
                 return False
@@ -65,17 +66,21 @@ class Referee():
         stone_list_data = list(stone_list)
         stone_list_data = sorted(stone_list_data, key=itemgetter(1, 0))
         count = 0
+        stone_list_result = []
         for i in range(len(stone_list_data)):
             first_stone = stone_list_data[i]
             while True:
                 if [first_stone[0] - 1, first_stone[1] +1] in stone_list_data:
+                    stone_list_result.append(first_stone)
                     first_stone = list([first_stone[0] -1, first_stone[1] +1])
                     count += 1
                 else:
                     count = 0
+                    stone_list_result = []
                     break
                 if count == 4:
-                    print('up right end success')
+                    # print(stone_list_result + [first_stone])
+                    # print('up right end success')
                     return True
         return False
 
@@ -94,7 +99,7 @@ class Referee():
                     count = 0
                     break
                 if count == 4:
-                    print('up right end success')
+                    # print('down right end success')
                     return True
         return False
 
@@ -128,18 +133,28 @@ class Referee():
         else:
             return result
 
+    def _check_occupied_point(self, target_point, stone_list, stone_list_opponent):
+        if target_point in stone_list + stone_list_opponent:
+            return True
+        else:
+            return False
+
     def check_3_count(self, target_point, stone_list, stone_list_opponent):
-
+        if self._check_occupied_point(target_point, stone_list, stone_list_opponent):
+            # print(f'already ocuupied point {target_point}')
+            return True
         vertical_count = self._check_3_direction_count('up', 'down', target_point, stone_list, stone_list_opponent)
-        print(f'vertical count {vertical_count}')
+        # print(f'vertical count {vertical_count}')
         horizontal_count = self._check_3_direction_count('right', 'left', target_point, stone_list, stone_list_opponent)
-        print(f'horizontal_count {horizontal_count}')
+        # print(f'horizontal_count {horizontal_count}')
         up_right_diagonal_count = self._check_3_direction_count('up_right', 'down_left', target_point, stone_list, stone_list_opponent)
-        print(f'up_right diagonal count {up_right_diagonal_count}')
+        # print(f'up_right diagonal count {up_right_diagonal_count}')
         down_right_diagonal_count = self._check_3_direction_count('down_right', 'up_left', target_point, stone_list, stone_list_opponent)
-        print(f'down_right diagonal count {down_right_diagonal_count}')
-
-        return vertical_count + horizontal_count + up_right_diagonal_count + down_right_diagonal_count
+        # print(f'down_right diagonal count {down_right_diagonal_count}')
+        if vertical_count + horizontal_count + up_right_diagonal_count + down_right_diagonal_count >= 2:
+            return True
+        else:
+            return False
 
     def _check_3_direction_count(self, direction1, direction2, target_point, stone_list, stone_list_opponent):
         count = 0
@@ -257,6 +272,11 @@ if __name__=='__main__':
 
     print('up right check')
     stone_list = [[5,5],[7,4],[4,5],[6,7],[4,6],[3,7],[2,8],[6,4]]
+    print(f'stone_list : {stone_list}')
+    print(referee.end_check(stone_list))
+
+    print('error test')
+    stone_list = [[2, 9], [1, 7], [13, 3], [12, 9], [2, 10], [0, 4], [10, 13], [0, 2], [0, 3], [13, 6], [7, 10], [9, 3], [9, 6], [11, 10], [9, 10], [6, 3], [10, 8], [11, 0], [3, 2], [11, 4], [9, 14], [6, 5], [9, 7], [10, 9], [14, 13], [6, 6], [13, 5], [10, 11], [7, 14], [3, 6], [9, 12], [12, 13], [7, 1], [14, 0], [4, 11], [2, 13], [6, 0], [13, 9], [8, 9], [10, 5], [7, 9], [0, 14], [1, 2], [8, 13]]
     print(f'stone_list : {stone_list}')
     print(referee.end_check(stone_list))
 
