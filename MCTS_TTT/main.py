@@ -176,6 +176,7 @@ class Window(QMainWindow):
 
     # action called by the push buttons
     def action_called(self):
+
         self.times += 1
 
         # getting button which called the action
@@ -212,6 +213,7 @@ class Window(QMainWindow):
 
         # call the winner checker method
         win = self.who_wins()
+
 
         # text
         text = ""
