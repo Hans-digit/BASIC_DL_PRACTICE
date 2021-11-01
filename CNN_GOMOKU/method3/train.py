@@ -21,8 +21,6 @@ def ans_to_onehot(ans_tensor, gomoku_dim):
 
 
 def train(batch_size, train_size, model):
-    print('train start')
-    random_probability = 0.1
     referee = Referee()
     gomoku = Gomoku()
     optimizer = torch.optim.Adam(model.parameters())
@@ -53,21 +51,108 @@ def train(batch_size, train_size, model):
             black_list_point = []
             white_list_point = []
 
+            # white_first_move_history = []
+            # white_first_move_value_list = []
+            # white_first_move_count_list = []
+            # white_move_history = []
+
             for i in range(gomoku.gomoku_dim * gomoku.gomoku_dim):
                 if i%2 == 0:
-                    # if gomoku.random_put(random_probability):
-                    #     black_point = gomoku.random_point(black_list_point, white_list_point)
-                    #     black_list_point.append(black_point)
-                    # else:
-                        # now situation
-                    black_point_situ = gomoku.get_gomoku_to_tensor(black_list_point, white_list_point).to(device)
+                    # black_first_move_history = []
+                    # black_first_move_value_list = []
+                    # black_first_move_count_list = []
 
-                    # possible situations
-                    black_point_possible_situ, possible_states = gomoku.gomoku_possibilities_to_tensor(black_list_point, white_list_point)
-                    black_point_possible_situ = black_point_possible_situ.to(device)
+                    move_history = []
+                    # black_move_history = []
+                    # white_move_history = []
+                    # black_move_value = []
+                    # black_move_count = []
+
+                    mcts_index = 0
+
+                    while mcts_index < 1600:
+                        result, first_move_black = gomoku.get_first_move(black_list_point, white_list_point, move_history)
+                        if result == 'reached':
+                            #all move data in list, considering sequence
+                            #this should be in list
+                            #total
+                            move_list = []
+                            #black
+                            move_black_list = []
+                            #white
+                            move_white_list = []
+
+                            #move data of black in set, not considering sequence
+                            #this should be in integer
+                            move_black_set = set()
+                            move_white_set = set()
+
+
+                            move_list.append(first_move_black)
+                            move_black_list.append(first_move_black)
+                            move_black_set.add(first_move_black[0]*15 + first_move_black[1])
+                            while True:
+                                point_situ = gomoku.get_gomoku_to_tensor(black_list_point + move_black_list, white_list_point + move_white_list)
+                                move_possibilities, state_value = model(point_situ)[:-1].tolist(), model(point_situ)[-1].item()
+                                nth_move_white = gomoku.get_nth_move(black_list_point + move_black_list, white_list_point + move_white_list,
+                                                                     move_history, move_possibilities, target_stone_color = 'black')
+                                move_list.append(nth_move_white)
+                                move_white_list.append(nth_move_white)
+                                move_white_set.add(nth_move_white)
+
+                                check_flag = 0
+                                for history_index in move_history:
+                                    if move_black_set == history_index[0]:
+                                        if move_white_set == history_index[1]:
+                                            check_flag = 1
+                                            break
+
+                                # when its totally new point
+                                if check_flag == 0:
+                                    move_history.append([move_black_set, move_white_set, 1, state_value])
+                                    move_history = gomoku.update_state_value(move_history, move_list, state_value, start_stone_color='black')
+                                    mcts_index += 1
+                                    break
+
+                                # when its already used point
+                                else:
+                                    point_situ = gomoku.get_gomoku_to_tensor(black_list_point + move_black_list, white_list_point + move_white_list)
+                                    move_possibilities, state_value = model(point_situ)[:-1].tolist(), model(point_situ)[-1].item()
+                                    nth_move_white = gomoku.get_nth_move(black_list_point + move_black_list, white_list_point + move_white_list, move_history, move_possibilities, target_stone_color = 'white')
+                                    move_list.append(nth_move_white)
+                                    move_white_list.append(nth_move_white)
+                                    move_white_set.add(nth_move_white)
+
+                                    check_flag = 0
+                                    for history_index in move_history:
+                                        if move_black_set == history_index[0]:
+                                            if move_white_set == history_index[1]:
+                                                check_flag = 1
+                                                break
+
+                                    if check_flag == 0:
+                                        move_history.append([move_black_set, move_white_set, 1, state_value])
+                                        move_history = gomoku.update_state_value(move_history, move_list, state_value,start_stone_color='black')
+                                        mcts_index += 1
+                                        break
+
+                                    else:
+                                        pass
+                        else:
+                            black_first_move_history.append(first_move_black)
+                            black_point_situ = gomoku.get_gomoku_to_tensor(black_list_point + first_move_black, white_list_point).to(device)
+                            black_first_move_value = model(black_point_situ)[-1].item()
+                            black_first_move_count_list.append(1)
+                            black_first_move_value_list.append(black_first_move_value)
+
+                            mcts_index += 1
+
+
+
+
 
                     # test possible situations
-                    black_point_value = model(black_point_possible_situ, black_point_possible_situ.size()[0]).to(device)
+                    black_point_value = model(black_point_situ).to(device)
                     black_point_value = black_point_value.matmul(weight_tensor)
                     black_point_max = torch.argmax(black_point_value, dim=0)
                     black_point_max = black_point_max.item()
